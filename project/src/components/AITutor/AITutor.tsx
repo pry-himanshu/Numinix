@@ -1,5 +1,10 @@
 import { useRef, useEffect } from 'react';
+// Removed duplicate import of ReactMarkdown
+// Removed duplicate import of remarkMath
+// Removed duplicate import of rehypeKatex
 import 'katex/dist/katex.min.css';
+// Removed duplicate import of lucide-react icons
+// Removed duplicate import of React
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -7,9 +12,12 @@ import 'katex/dist/katex.min.css';
 import { Send, Bot, User, Loader, Sparkles, Brain, Zap, Crown } from 'lucide-react';
 import { solveMathProblem } from '../../services/aiService';
 import { useAITutor, Message } from '../../context/AITutorContext';
+import { useAuth } from '../../context/AuthContext';
+import avatars from '../../data/avatars.json';
 
 export function AITutor() {
   const { messages, setMessages, input, setInput, loading, setLoading } = useAITutor();
+  const { userProfile } = useAuth();
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -182,8 +190,14 @@ export function AITutor() {
                   )}
                 </div>
                 {message.isUser && (
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                    <User className="h-5 w-5 text-white" />
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg text-2xl">
+                    {(() => {
+                      if (userProfile) {
+                        const avatar = avatars.find(a => a.id === userProfile.avatar_id);
+                        return avatar ? avatar.image : <User className="h-5 w-5 text-white" />;
+                      }
+                      return <User className="h-5 w-5 text-white" />;
+                    })()}
                   </div>
                 )}
               </div>
