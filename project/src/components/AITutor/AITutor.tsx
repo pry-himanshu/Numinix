@@ -1,4 +1,10 @@
-import React from 'react';
+import { useRef, useEffect } from 'react';
+// Removed duplicate import of ReactMarkdown
+// Removed duplicate import of remarkMath
+// Removed duplicate import of rehypeKatex
+import 'katex/dist/katex.min.css';
+// Removed duplicate import of lucide-react icons
+// Removed duplicate import of React
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -9,6 +15,13 @@ import { useAITutor, Message } from '../../context/AITutorContext';
 
 export function AITutor() {
   const { messages, setMessages, input, setInput, loading, setLoading } = useAITutor();
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,14 +39,12 @@ export function AITutor() {
 
     try {
       const solution = await solveMathProblem(input);
-      
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: "Here's the solution to your problem:",
         isUser: false,
         solution,
       };
-
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       const errorMessage: Message = {
@@ -129,7 +140,10 @@ export function AITutor() {
           </div>
 
           {/* Messages Area */}
-          <div className="h-96 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-transparent to-black/10">
+          <div
+            className="h-96 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-transparent to-black/10"
+            ref={messagesContainerRef}
+          >
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -142,7 +156,6 @@ export function AITutor() {
                     <Bot className="h-5 w-5 text-white" />
                   </div>
                 )}
-                
                 <div
                   className={`max-w-xs lg:max-w-2xl px-6 py-4 rounded-3xl shadow-xl backdrop-blur-sm border ${
                     message.isUser
@@ -151,7 +164,6 @@ export function AITutor() {
                   }`}
                 >
                   <p className="leading-relaxed">{message.content}</p>
-                  
                   {message.solution && (
                     <div className="mt-4 p-4 bg-black/40 backdrop-blur-sm rounded-2xl border border-emerald-400/30">
                       <div className="flex items-center space-x-2 mb-3">
@@ -162,7 +174,6 @@ export function AITutor() {
                         <ReactMarkdown
                           remarkPlugins={[remarkMath]}
                           rehypePlugins={[rehypeKatex]}
-                          className="text-gray-200"
                         >
                           {message.solution.solution}
                         </ReactMarkdown>
@@ -175,7 +186,6 @@ export function AITutor() {
                     </div>
                   )}
                 </div>
-
                 {message.isUser && (
                   <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
                     <User className="h-5 w-5 text-white" />
@@ -183,7 +193,6 @@ export function AITutor() {
                 )}
               </div>
             ))}
-            
             {loading && (
               <div className="flex items-start space-x-4">
                 <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-lg">
@@ -204,6 +213,7 @@ export function AITutor() {
                 </div>
               </div>
             )}
+            {/* No need for messagesEndRef anymore */}
           </div>
 
           {/* Input Area */}
