@@ -1,10 +1,5 @@
 import { useRef, useEffect } from 'react';
-// Removed duplicate import of ReactMarkdown
-// Removed duplicate import of remarkMath
-// Removed duplicate import of rehypeKatex
 import 'katex/dist/katex.min.css';
-// Removed duplicate import of lucide-react icons
-// Removed duplicate import of React
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
