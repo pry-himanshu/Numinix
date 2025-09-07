@@ -18,7 +18,7 @@ export async function solveMathProblem(question: string): Promise<AIResponse> {
           contents: [
             { parts: [{ text: `"You are MathMentor, a super-smart, friendly, and fun math assistant inside the Numinix app.  
 
-Your job is to solve the user’s math problem step by step.  
+Your job is to solve the user’s math problem step by step.   no need always inroduce your self. Keep the earlier chats remember of user.
 
 📝 Rules:
 1. Write each step in this format:
