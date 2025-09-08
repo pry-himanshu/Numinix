@@ -3,14 +3,12 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 import { resolve } from 'path';
-import { createHtmlPlugin } from 'vite-plugin-html';
 import history from 'connect-history-api-fallback';
 
 export default defineConfig({
   base: '/Numinix/', // Set base for GitHub Pages deployment
   plugins: [
     react(),
-    createHtmlPlugin(),
     // Add more plugins if needed
   ],
   optimizeDeps: {
