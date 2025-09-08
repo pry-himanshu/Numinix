@@ -10,6 +10,7 @@ export interface User {
   avatar_id: number;
   unlocked_chapters: string[];
   created_at: string;
+  diagnostic_completed?: boolean;
   chapter_stars?: { [chapterId: string]: number };
 }
 

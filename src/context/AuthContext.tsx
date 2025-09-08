@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUserProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
         .eq('id', userId)
         .single();
@@ -82,8 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         c.class_level === userData.class_level && c.order === 1
       );
 
-      const { error: profileError } = await supabase
-        .from('profiles')
+      const { error: userError } = await supabase
+        .from('users')
         .insert({
           id: data.user.id,
           email,
@@ -94,9 +94,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           total_wrong: 0,
           avatar_id: 1,
           unlocked_chapters: firstChapter ? [firstChapter.id] : [],
+          diagnostic_completed: false,
         });
 
-      if (profileError) throw profileError;
+      if (userError) throw userError;
     }
   };
 
@@ -133,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const newMoney = (userProfile?.money || 0) + money;
 
     const { error } = await supabase
-      .from('profiles')
+      .from('users')
       .update({
         total_correct: newTotalCorrect,
         total_wrong: newTotalWrong,
@@ -157,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     const { error } = await supabase
-      .from('profiles')
+      .from('users')
       .update(updates)
       .eq('id', user.id);
 
