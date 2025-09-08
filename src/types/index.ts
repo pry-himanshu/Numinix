@@ -68,3 +68,44 @@ export interface TimerSession {
   completed: boolean;
   created_at: string;
 }
+
+export interface DiagnosticQuestion {
+  id: string;
+  question: string;
+  options?: string[];
+  correct_answer: string;
+  explanation: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  topic: string;
+  concept: string;
+}
+
+export interface DiagnosticResult {
+  id: string;
+  user_id: string;
+  score: number;
+  total_questions: number;
+  strengths: string[];
+  weaknesses: string[];
+  gaps: string[];
+  recommendations: string[];
+  completed_at: string;
+}
+
+export interface StudyPlan {
+  chapter_id: string;
+  prerequisites: string[];
+  recommended_practice: string[];
+  estimated_time: number;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+}
+
+export interface ChapterProgress {
+  chapter_id: string;
+  completion_percentage: number;
+  mastery_level: number;
+  time_spent: number;
+  last_accessed: string;
+  quiz_scores: number[];
+  practice_completed: number;
+}
