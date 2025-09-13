@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Numinix</string>
+    <string name="title_activity_main">Numinix</string>
+    <string name="package_name">com.numinix.app</string>
+    <string name="custom_url_scheme">com.numinix.app</string>
+</resources>
