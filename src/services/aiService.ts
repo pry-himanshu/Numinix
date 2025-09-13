@@ -50,22 +50,28 @@ export async function solveMathProblem(question: string): Promise<AIResponse> {
 export async function generateQuestions(userProfile: any, selectedChapters: string[]): Promise<any[]> {
 	try {
 		const GROQ_PROXY_URL = 'http://localhost:3001/api/groq-chat';
+		
 		// Gather personalization data
 		const classLevel = userProfile.class_level;
 		const strengths = userProfile.strengths || [];
 		const weaknesses = userProfile.weaknesses || [];
 		const unlockedChapters = userProfile.unlocked_chapters || [];
+		
 		// You may want to fetch chapter/topic names from chaptersData if needed
 		// For now, just pass selectedChapters as is
+		
 		const prompt = `You are a math quiz generator for class ${classLevel} students. Personalize the questions based on the following:
+
 Strengths: ${strengths.join(', ') || 'None'}
 Weaknesses: ${weaknesses.join(', ') || 'None'}
 Unlocked Chapters: ${unlockedChapters.join(', ') || 'None'}
 Selected Chapters: ${selectedChapters.join(', ') || 'None'}
+
 Return ONLY a valid JSON array with this exact structure:
 [
   { "id": "q1", "question": "What is 2 + 2?", "options": ["3", "4", "5", "6"], "correct_answer": "4", "explanation": "2 + 2 equals 4 because we add two and two together.", "difficulty": "easy", "class_level": ${classLevel}, "topic": "Addition" }
 ]
+
 Requirements:
 - Exactly 10 questions
 - Questions appropriate for class ${classLevel}
@@ -74,10 +80,12 @@ Requirements:
 - Each question must have exactly 4 options
 - Clear explanations
 - Valid JSON format only, no extra text`;
+
 		const messages = [
 			{ role: "system", content: prompt },
 			{ role: "user", content: `Generate 10 personalized math quiz questions for class ${classLevel}.` }
 		];
+		
 		const response = await fetch(GROQ_PROXY_URL, {
 			method: "POST",
 			headers: {
