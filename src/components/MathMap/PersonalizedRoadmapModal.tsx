@@ -1,12 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, Clock, Target, BookOpen, Sparkles, Trophy, Zap, Crown, ArrowRight, CheckCircle, Star, TrendingUp, Play } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { ProgressTrackingService, PersonalizedRoadmap, PersonalizedContent } from '../../services/progressTrackingService';
+import { ProgressTrackingService } from '../../services/progressTrackingService';
 
 interface PersonalizedRoadmapModalProps {
   chapterId: string;
   chapterName: string;
   onClose: () => void;
+}
+
+interface PersonalizedRoadmap {
+  id?: string;
+  user_id: string;
+  chapter_id: string;
+  roadmap_data: any;
+  current_step: number;
+  total_steps: number;
+  completion_percentage: number;
+  focus_areas: string[];
+  priority_concepts: string[];
+  last_updated: string;
+}
+
+interface PersonalizedContent {
+  id?: string;
+  user_id: string;
+  chapter_id: string;
+  topic: string;
+  content_type: 'explanation' | 'example' | 'practice' | 'summary';
+  personalized_content: string;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  user_weaknesses: string[];
+  user_strengths: string[];
+  last_updated: string;
+  effectiveness_score: number;
+  usage_count: number;
 }
 
 export function PersonalizedRoadmapModal({ chapterId, chapterName, onClose }: PersonalizedRoadmapModalProps) {
@@ -37,7 +65,6 @@ export function PersonalizedRoadmapModal({ chapterId, chapterName, onClose }: Pe
       setAiInsights(insights);
 
       // Load personalized content for chapter topics
-      // This would be expanded based on chapter topics
       const sampleTopics = ['Introduction', 'Core Concepts', 'Applications'];
       const contentData: { [topic: string]: PersonalizedContent } = {};
       

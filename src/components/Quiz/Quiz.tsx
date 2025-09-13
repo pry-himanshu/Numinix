@@ -115,23 +115,6 @@ export function Quiz() {
         const generatedQuestions = await generateQuestions(userProfile, selectedChapters);
         console.log('AI generatedQuestions:', generatedQuestions);
         setQuestions(generatedQuestions.slice(0, 10));
-      } catch (err) {
-        setError('Network error. Please check your connection and try again.');
-        setQuestions([]);
-      }
-    } else if (questionSource === 'preloaded') {
-      // Filter preloaded questions by selected chapters
-      let availableQuestions = questions9.filter(q =>
-        selectedChapters.some(chapterId => {
-          const chapter = chaptersData.find(c => c.id === chapterId);
-          return chapter && q.chapter && (q.chapter === chapter.chapter || q.chapter === chapterId);
-        }) && !usedQuestionIds.includes(q.id)
-      );
-      
-      // If all questions used, reset pool
-      if (availableQuestions.length === 0) {
-        setUsedQuestionIds([]);
-        availableQuestions = questions9.filter(q =>
           selectedChapters.some(chapterId => {
             const chapter = chaptersData.find(c => c.id === chapterId);
             return chapter && q.chapter && (q.chapter === chapter.chapter || q.chapter === chapterId);
@@ -162,6 +145,10 @@ export function Quiz() {
     if (userProfile) {
       recordQuestionAttempt(isCorrect);
     }
+
+    if (userProfile) {
+      recordQuestionAttempt(isCorrect);
+    }
     setTimeout(() => {
       if (currentQuestion + 1 < questions.length) {
         setCurrentQuestion(currentQuestion + 1);
@@ -172,6 +159,34 @@ export function Quiz() {
         completeQuiz();
       }
     }, 2000);
+  };
+
+  const recordQuestionAttempt = async (isCorrect: boolean) => {
+    if (!userProfile) return;
+    
+    const current = questions[currentQuestion];
+    try {
+      const { ProgressTrackingService } = await import('../../services/progressTrackingService');
+      await ProgressTrackingService.recordQuestionAttempt({
+        user_id: userProfile.id,
+        question_id: current.id,
+        question_text: current.question,
+        question_type: 'quiz',
+        chapter_id: selectedChapters[0], // Use first selected chapter
+        topic: current.topic,
+        concept: current.topic, // Use topic as concept for now
+        difficulty: current.difficulty,
+        user_answer: selectedAnswer,
+        correct_answer: current.correct_answer,
+        is_correct: isCorrect,
+        time_taken_seconds: 30 - timeLeft,
+        hints_used: 0,
+        attempts_count: 1,
+        confidence_level: 3
+      });
+    } catch (error) {
+      console.error('Error recording question attempt:', error);
+    }
   };
 
   const recordQuestionAttempt = async (isCorrect: boolean) => {

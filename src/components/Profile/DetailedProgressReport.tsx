@@ -11,6 +11,7 @@ export function DetailedProgressReport() {
   const [loading, setLoading] = useState(true);
   const [reportType, setReportType] = useState<'weekly' | 'monthly' | 'chapter'>('weekly');
   const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (userProfile) {
@@ -22,6 +23,7 @@ export function DetailedProgressReport() {
     if (!userProfile) return;
     
     setLoading(true);
+    setError(null);
     setError(null);
     setError(null);
     try {
@@ -40,6 +42,7 @@ export function DetailedProgressReport() {
       console.error('Error loading progress data:', error);
       setError('Failed to load progress data. Please try again.');
       setError('Failed to load progress data. Please try again.');
+      setError('Failed to load progress data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -54,6 +57,24 @@ export function DetailedProgressReport() {
           </div>
           <h2 className="text-2xl font-bold text-white mb-4">Generating Progress Report</h2>
           <p className="text-gray-300">Analyzing your learning journey...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-teal-900 pb-20 flex items-center justify-center">
+        <div className="bg-black/40 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/20 text-center">
+          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-white mb-4">Error Loading Report</h2>
+          <p className="text-gray-300 mb-6">{error}</p>
+          <button
+            onClick={() => loadProgressData()}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -113,6 +134,17 @@ export function DetailedProgressReport() {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const formatDateRange = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    
+    if (startDate.toDateString() === endDate.toDateString()) {
+      return formatDate(start);
+    }
+    
+    return `${formatDate(start)} - ${formatDate(end)}`;
   };
 
   const formatDateRange = (start: string, end: string) => {
