@@ -19,24 +19,33 @@ export function EnhancedMathMap({ chapterDiagnostics, onChapterClick, setShowNav
   useEffect(() => {
     setShowNavigation(!showRoadmapModal);
   }, [showRoadmapModal, setShowNavigation]);
+  const [chapterAnalytics, setChapterAnalytics] = useState<{ [chapterId: string]: any }>({});
   const [userAnalytics, setUserAnalytics] = useState<any>(null);
 
   useEffect(() => {
-    if (userProfile) {
-      loadUserAnalytics();
-    }
-  }, [userProfile]);
-
-  const loadUserAnalytics = async () => {
     if (!userProfile) return;
-
-    try {
-      const analytics = await ProgressTrackingService.getUserAnalytics(userProfile.id);
-      setUserAnalytics(analytics);
-    } catch (error) {
-      console.error('Error loading user analytics:', error);
-    }
-  };
+    const fetchAll = async () => {
+      // Fetch global analytics
+      try {
+        const globalAnalytics = await ProgressTrackingService.getUserAnalytics(userProfile.id);
+        setUserAnalytics(globalAnalytics);
+      } catch (e) {
+        setUserAnalytics(null);
+      }
+      // Fetch per-chapter analytics
+      const analyticsByChapter: { [chapterId: string]: any } = {};
+      for (const chapter of sortedChapters) {
+        try {
+          const analytics = await ProgressTrackingService.getUserAnalytics(userProfile.id, chapter.id);
+          analyticsByChapter[chapter.id] = analytics.analytics;
+        } catch (e) {
+          analyticsByChapter[chapter.id] = null;
+        }
+      }
+      setChapterAnalytics(analyticsByChapter);
+    };
+    fetchAll();
+  }, [userProfile]);
 
   if (!userProfile) return null;
 
@@ -298,6 +307,17 @@ export function EnhancedMathMap({ chapterDiagnostics, onChapterClick, setShowNav
                         >
                           Unlock for {chapter.unlock_cost} coins
                         </button>
+                      ) : !chapterDiagnostics[chapter.id] ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onChapterClick(chapter);
+                          }}
+                          className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white py-3 rounded-xl text-center font-semibold hover:from-yellow-700 hover:to-orange-700 transition-all flex items-center justify-center space-x-2 transform hover:scale-105"
+                        >
+                          <span>Give Diagnostic Test</span>
+                          <Brain className="h-4 w-4" />
+                        </button>
                       ) : (
                         <button
                           onClick={(e) => {
@@ -312,21 +332,21 @@ export function EnhancedMathMap({ chapterDiagnostics, onChapterClick, setShowNav
                       )}
                     </div>
 
-                    {/* Progress Bar */}
-                    {diagnostic && (
+                    {/* Progress Bar - show per-chapter progress (accuracy) */}
+                    {chapterAnalytics[chapter.id] && (
                       <div className="mt-4">
                         <div className="flex justify-between text-sm text-gray-400 mb-2">
                           <span>Progress</span>
-                          <span>{Math.round(diagnostic.score_percentage)}%</span>
+                          <span>{chapterAnalytics[chapter.id].accuracy.toFixed(1)}%</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-2">
                           <div
                             className="bg-gradient-to-r from-blue-400 to-purple-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${diagnostic.score_percentage}%` }}
+                            style={{ width: `${chapterAnalytics[chapter.id].accuracy}%` }}
                           />
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
-                          Diagnostic: {diagnostic.correct_answers}/{diagnostic.total_questions} correct
+                          {chapterAnalytics[chapter.id].correctAnswers}/{chapterAnalytics[chapter.id].totalQuestions} correct
                         </div>
                       </div>
                     )}

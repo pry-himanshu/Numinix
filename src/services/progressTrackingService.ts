@@ -105,28 +105,7 @@ export class ProgressTrackingService {
 
   // Update personalization after each question
   static async updatePersonalizationAfterQuestion(attempt: QuestionAttempt): Promise<void> {
-    try {
-      // Update roadmap based on new performance data
-      if (attempt.chapter_id) {
-        await this.updatePersonalizedRoadmap(attempt.user_id, attempt.chapter_id);
-      }
-
-      // Regenerate AI insights
-      await this.regenerateAIInsights(attempt.user_id);
-
-      // Update personalized content
-      if (attempt.chapter_id && attempt.topic) {
-        await this.updatePersonalizedContent(
-          attempt.user_id,
-          attempt.chapter_id,
-          attempt.topic,
-          attempt.is_correct,
-          attempt.concept || ''
-        );
-      }
-    } catch (error) {
-      console.error('Error updating personalization:', error);
-    }
+    // AI and personalized content updates are disabled
   }
 
   // Generate or update personalized roadmap
@@ -218,7 +197,19 @@ export class ProgressTrackingService {
         // Fallback for difficultyLevel
         difficultyLevel = typeof data?.difficulty_level === 'string' ? data.difficulty_level : 'unknown';
       }
-      let prompt = `You are an expert math tutor creating a personalized learning roadmap for a student.
+      // Get chapter topics from chapters.json
+      let chapterTopics = [];
+      try {
+        const chaptersData = require('../data/chapters.json');
+        const chapterObj = chaptersData.find((ch: any) => ch.id === chapterId);
+        if (chapterObj && Array.isArray(chapterObj.topics)) {
+          chapterTopics = chapterObj.topics;
+        }
+      } catch (e) {
+        // fallback: no topics
+      }
+
+      let prompt = `You are an expert math tutor creating a detailed, thorough, and highly personalized learning roadmap for a student.
 
 Student Performance Data:
 - Chapter: ${chapterId}
@@ -228,13 +219,15 @@ Student Performance Data:
 - Knowledge Gaps: ${knowledgeGaps}
 - Recent Performance: ${data.recentAttempts?.length || 0} recent attempts
 
-For each step, provide a realistic, data-driven estimate for "estimated_time_minutes" based on:
-- The student's diagnostic score and performance
-- The difficulty of the concepts in that step
-- Average time students spend on similar concepts (e.g. 10-20 min for easy, 20-40 min for medium, 40-60 min for hard)
-- If the student is weak in a concept, increase the time estimate
+IMPORTANT: Here are the major topics in this chapter:
+${chapterTopics.length ? chapterTopics.map((t: string) => `- ${t}`).join('\n') : 'No topics listed'}
 
-Create a personalized roadmap as JSON with this exact structure:
+Requirements:
+- The roadmap must include steps that cover ALL major topics in the chapter, in a logical learning order.
+- Address weak areas and knowledge gaps early, but ensure every topic is covered.
+- For each step, provide a realistic, data-driven estimate for "estimated_time_minutes" based on the student's diagnostic score and the difficulty of the concepts in that step.
+- Use a motivational and encouraging tone.
+- Return only valid JSON in this exact structure:
 {
   "roadmap_title": "Personalized Learning Path for [Chapter]",
   "student_level": "beginner/intermediate/advanced",
@@ -255,20 +248,13 @@ Create a personalized roadmap as JSON with this exact structure:
   "motivation_message": "Encouraging message for the student",
   "next_milestone": "What student should achieve next"
 }
-
-Requirements:
-- 5-8 steps in logical learning order
-- Address weak areas first
-- Build on strengths
-- Include specific, realistic time estimates for each step
-- Motivational and encouraging tone
-- Return only valid JSON`;
+`;
 
       const response = await fetch(GROQ_PROXY_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: MODEL_NAME || 'openai/gpt-oss-20b',
+          model: "llama-3.1-8b-instant",
           messages: [{ role: "user", content: prompt }]
         })
       });
@@ -277,11 +263,25 @@ Requirements:
         const result = await response.json();
         if (result?.choices?.[0]?.message?.content) {
           let text = result.choices[0].message.content.trim();
-          text = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+          // Try to extract JSON from a code block if present
+          const jsonBlockMatch = text.match(/```json\s*([\s\S]*?)```/i) || text.match(/```\s*([\s\S]*?)```/i);
+          let jsonString = jsonBlockMatch ? jsonBlockMatch[1].trim() : text;
+
+          // If not found, try to extract the first {...} or [...] block
+          if (!jsonBlockMatch) {
+            const firstCurly = text.indexOf('{');
+            const lastCurly = text.lastIndexOf('}');
+            if (firstCurly !== -1 && lastCurly !== -1 && lastCurly > firstCurly) {
+              jsonString = text.substring(firstCurly, lastCurly + 1);
+            }
+          }
+
+          // Remove JS-style comments from JSON string
+          jsonString = jsonString.replace(/\/\/.*$/gm, '');
           try {
-            return JSON.parse(text);
+            return JSON.parse(jsonString);
           } catch (parseError) {
-            console.error('Error parsing roadmap JSON:', parseError);
+            console.error('Error parsing roadmap JSON:', parseError, jsonString);
           }
         }
       } else {
@@ -506,12 +506,13 @@ Return only the JSON array of insights.`;
     topic: string,
     difficultyLevel: string,
     wasCorrect: boolean,
-    concept: string
+    concept: string,
+    studentName?: string
   ): Promise<string> {
     try {
-      const prompt = `You are a friendly math tutor creating personalized content for a student.
+      const prompt = `You are a friendly math tutor creating personalized content for a student named ${studentName || 'the student'}.
 
-IMPORTANT: Only create mathematics content. Do NOT include any science, physics, chemistry, or biology material. Focus strictly on math topics and concepts.
+IMPORTANT: Only create mathematics content. Do NOT include any science, physics, chemistry, or biology material. Focus strictly on math topics and concepts.Forcely telling use students name .
 
 Student Context:
 - Topic: ${topic}
@@ -534,7 +535,7 @@ ${wasCorrect
   : 'Since they struggled with the last question, provide extra support and break down the concept into smaller steps.'
 }
 
-Write as if you're a caring tutor who knows the student personally. Keep it engaging and motivational.`;
+Write as if you're a caring tutor who knows ${studentName || 'the student'} personally. Keep it engaging and motivational.`;
 
       const response = await fetch(GROQ_PROXY_URL, {
         method: 'POST',
@@ -631,9 +632,8 @@ Remember, every expert was once a beginner. You're doing great! 💪`;
       // If no personalized content, generate it using AI and performance
       if (arguments.length === 4) {
         const performance = arguments[3];
-        // Compose prompt for AI
-        let prompt = `You are an expert math tutor. The student ${performance.fullName || 'the student'} is in class ${performance.classLevel} and scored ${performance.testScore}% in the diagnostic test. Their strengths: ${performance.strengths.join(', ') || 'None'}. Weaknesses: ${performance.weaknesses.join(', ') || 'None'}. Explain the chapter '${topic}' in a way that matches the user performance level and very wel user should understand . Explain complete '${topic}' in very detailed and nice understanding way to ${performance.fullName || 'the student'} he should feel like this content is just made for me`;
-        // Call AI model to generate content
+        // Compose prompt for AI and pass student's name to generator
+        let studentName = performance.fullName || 'the student';
         let aiContent = '';
         try {
           aiContent = await ProgressTrackingService.generatePersonalizedContent(
@@ -642,7 +642,8 @@ Remember, every expert was once a beginner. You're doing great! 💪`;
             topic,
             'intermediate',
             true,
-            topic
+            topic,
+            studentName
           );
         } catch (err) {
           aiContent = `Based on your score (${performance.testScore}%) and current strengths (${performance.strengths.join(', ') || 'None'}) and weaknesses (${performance.weaknesses.join(', ') || 'None'}), here's a tailored explanation for ${topic}.`;
@@ -737,9 +738,6 @@ Remember, every expert was once a beginner. You're doing great! 💪`;
         .upsert([diagnosticToSave], { onConflict: 'user_id,chapter_id' });
 
       if (error) throw error;
-
-      // Generate initial personalized roadmap
-      await this.updatePersonalizedRoadmap(diagnostic.user_id, diagnostic.chapter_id);
 
       // Generate AI recommendations
       await this.generateAIRecommendations(diagnostic);

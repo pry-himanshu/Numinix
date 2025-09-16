@@ -41,6 +41,15 @@ interface PersonalizedContent {
 }
 
 export function PersonalizedRoadmapModal({ chapterId, chapterName, onClose, setShowNavigation }: PersonalizedRoadmapModalProps) {
+  // Load personalized data once when modal opens (Explore Chapter is clicked)
+  // Cache for loaded chapter data
+  const [loadedChapterId, setLoadedChapterId] = useState<string | null>(null);
+  useEffect(() => {
+    if (loadedChapterId !== chapterId) {
+      loadPersonalizedData();
+    }
+    // eslint-disable-next-line
+  }, [chapterId]);
   const { userProfile } = useAuth();
   const [roadmap, setRoadmap] = useState<PersonalizedRoadmap | null>(null);
   const [personalizedContent, setPersonalizedContent] = useState<{ [topic: string]: PersonalizedContent }>({});
@@ -49,19 +58,10 @@ export function PersonalizedRoadmapModal({ chapterId, chapterName, onClose, setS
   const [activeTab, setActiveTab] = useState<'roadmap' | 'content' | 'insights'>('roadmap');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (userProfile) {
-       // Regenerate AI insights for the selected chapter
-      (async () => {
-        await ProgressTrackingService.regenerateAIInsights(userProfile.id, chapterId);
-        await loadPersonalizedData();
-      })();
-    }
-  }, [userProfile, chapterId]);
+  // Remove auto-refresh. Only load data when user clicks refresh.
 
   const loadPersonalizedData = async () => {
     if (!userProfile) return;
-
     setLoading(true);
     try {
       // Load personalized roadmap
@@ -72,34 +72,40 @@ export function PersonalizedRoadmapModal({ chapterId, chapterName, onClose, setS
       const insights = await ProgressTrackingService.getLatestAIInsights(userProfile.id);
       setAiInsights(insights);
 
-      // Load personalized content for chapter topics
-      const sampleTopics = ['Introduction', 'Core Concepts', 'Applications'];
+      // Load personalized content for ALL chapter topics
+      const chaptersData = require('../../data/chapters.json');
+      const chapterObj = chaptersData.find((ch: any) => ch.id === chapterId);
+      const allTopics = chapterObj && Array.isArray(chapterObj.topics) ? chapterObj.topics : [];
       const contentData: { [topic: string]: PersonalizedContent } = {};
-
-      // Always include chapter name in topic prompt for specificity
-      const topics = ['Introduction', 'Core Concepts', 'Applications'];
-      for (const topic of topics) {
-        const performance = {
-          classLevel: userProfile.class_level,
-          testScore: roadmapData?.diagnostic?.score_percentage || 0,
-          strengths: roadmapData?.strongAreas || [],
-          weaknesses: roadmapData?.weakAreas || [],
-          fullName: userProfile.name || userProfile.full_name || 'Student'
-        };
-        // Always ask AI for topic in context of chapter
-        const aiTopic = `${topic} for chapter '${chapterName}'`;
-        const content = await ProgressTrackingService.getPersonalizedContent(
+      for (const topic of allTopics) {
+        // Try to fetch from DB first
+        let content = await ProgressTrackingService.getPersonalizedContent(
           userProfile.id,
           chapterId,
-          aiTopic,
-          performance
+          topic
         );
+        // If not found, trigger AI generation with performance
+        if (!content) {
+          const performance = {
+            fullName: userProfile.name || 'Student',
+            classLevel: userProfile.class_level,
+            testScore: roadmapData?.diagnostic?.score_percentage || 0,
+            strengths: roadmapData?.strongAreas || [],
+            weaknesses: roadmapData?.weakAreas || []
+          };
+          content = await (ProgressTrackingService.getPersonalizedContent as any)(
+            userProfile.id,
+            chapterId,
+            topic,
+            performance
+          );
+        }
         if (content) {
           contentData[topic] = content;
         }
       }
       setPersonalizedContent(contentData);
-
+      setLoadedChapterId(chapterId); // Mark as loaded
     } catch (error) {
       console.error('Error loading personalized data:', error);
     } finally {
@@ -109,12 +115,13 @@ export function PersonalizedRoadmapModal({ chapterId, chapterName, onClose, setS
 
   const refreshInsights = async () => {
     if (!userProfile) return;
-    
     setLoading(true);
     try {
+      setLoadedChapterId(null); // Clear cache so next loadPersonalizedData will re-fetch
       await ProgressTrackingService.regenerateAIInsights(userProfile.id);
       const newInsights = await ProgressTrackingService.getLatestAIInsights(userProfile.id);
       setAiInsights(newInsights);
+      await loadPersonalizedData(); // Re-fetch all data
     } catch (error) {
       console.error('Error refreshing insights:', error);
     } finally {
@@ -184,6 +191,17 @@ export function PersonalizedRoadmapModal({ chapterId, chapterName, onClose, setS
 
         {/* Content */}
         <div className="p-8">
+          <div className="flex justify-end mb-4">
+            <button
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-xl shadow hover:from-blue-700 hover:to-purple-700 transition-all font-semibold"
+              onClick={() => {
+                setLoadedChapterId(null);
+                loadPersonalizedData();
+              }}
+            >
+              Refresh Personalized Data
+            </button>
+          </div>
           {activeTab === 'roadmap' && (
             <div className="space-y-8">
               {roadmap ? (

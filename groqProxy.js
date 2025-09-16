@@ -36,7 +36,7 @@ app.post('/api/groq-chat', async (req, res) => {
   try {
     console.log('--- Incoming /api/groq-chat request body ---');
     console.dir(req.body, { depth: 5 });
-    const { messages, model } = req.body;
+  const { messages } = req.body;
 
     if (!messages || !Array.isArray(messages)) {
       console.error('400 Bad Request: Missing or invalid messages array. Received:', req.body);
@@ -48,7 +48,7 @@ app.post('/api/groq-chat', async (req, res) => {
     }
 
     console.log('Groq API Request:', {
-      model: model || 'openai/gpt-oss-20b',
+      model: 'llama-3.1-8b-instant',
       messageCount: messages.length,
       timestamp: new Date().toISOString(),
       firstMessage: messages[0]
@@ -56,9 +56,9 @@ app.post('/api/groq-chat', async (req, res) => {
 
     const chatCompletion = await groq.chat.completions.create({
       messages,
-      model: model || 'openai/gpt-oss-20b',
+      model: 'llama-3.1-8b-instant',
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: 65000,
       top_p: 1,
       stream: false
     });

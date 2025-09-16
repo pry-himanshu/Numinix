@@ -1,25 +1,28 @@
 import { DiagnosticQuestion, DiagnosticResult } from '../types';
+import chaptersData from '../data/chapters.json';
 
 const GROQ_PROXY_URL = 'http://localhost:3001/api/groq-chat';
-const MODEL_NAME = 'openai/gpt-oss-20b';
 
- export async function generateDiagnosticTest(classLevel: number, chapterName: string): Promise<DiagnosticQuestion[]> {
+export async function generateDiagnosticTest(classLevel: number, chapterId: string): Promise<DiagnosticQuestion[]> {
+  const chapter = chaptersData.find(c => c.id === chapterId);
+  if (!chapter) {
+    throw new Error(`Chapter with id ${chapterId} not found.`);
+  }
   try {
-    const chapterConcepts = getPrerequisiteConceptsForClass(classLevel);
     
-    let prompt = `You are an expert math educator creating diagnostic questions for Class ${classLevel} students in India following NCERT curriculum.
+  let prompt = `You are an expert math educator creating diagnostic questions for Class ${classLevel} based on the basic  concepts required for chapter  ${chapter.chapter} .
 
-IMPORTANT: Only create mathematics questions. Do NOT include any science, physics, chemistry, or biology content. Focus strictly on math.
+IMPORTANT: Only create mathematics questions. Do NOT include any science, physics, chemistry, or biology content. Focus strictly on math. Options should have a correct option and answer shoulod 100% correct.
 
 CRITICAL INSTRUCTIONS:
 1. Return ONLY a valid JSON array
 2. No markdown formatting, no explanations, no additional text
 3. Must be parseable JSON
 
-Create exactly 15 diagnostic questions that test prerequisite knowledge needed for the chapter '${chapterName}' in Class ${classLevel} mathematics.
+Create exactly 15 diagnostic questions that test prerequisite knowledge needed for the chapter  ${chapter.chapter} in Class ${classLevel} mathematics.
 
 Focus on these prerequisite concepts:
-${chapterConcepts}
+ ${chapter.chapter}
 
 Return this exact JSON structure:
 [
@@ -41,92 +44,16 @@ Requirements:
 - Clear, student-friendly explanations
 - Return ONLY the JSON array`;
 
-    const response = await fetch(GROQ_PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: MODEL_NAME,
-        messages: [
-          { role: "user", content: prompt }
-        ]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Groq API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    const aiContent = data?.choices?.[0]?.message?.content;
-    if (!aiContent) {
-      throw new Error('Invalid response from AI: No content');
-    }
-
-    let rawText = aiContent.trim();
-
-    // Clean up response
-    rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
-
-    // Find the JSON array boundaries
-    const firstBracket = rawText.indexOf('[');
-    const lastBracket = rawText.lastIndexOf(']');
-
-    if (firstBracket === -1 || lastBracket === -1 || firstBracket >= lastBracket) {
-      throw new Error('No valid JSON array found in AI response');
-    }
-
-    const jsonString = rawText.substring(firstBracket, lastBracket + 1);
-
-    let questions;
-    try {
-      questions = JSON.parse(jsonString);
-    } catch (parseError) {
-      console.error('JSON parsing failed:', parseError);
-      throw new Error(`Failed to parse AI response as JSON: ${parseError.message}`);
-    }
-
-    if (!Array.isArray(questions) || questions.length === 0) {
-      throw new Error('No valid questions generated');
-    }
-
-    // Validate questions
-    const validQuestions = questions.filter(q => 
-      q.id && q.question && q.options && Array.isArray(q.options) && 
-      q.correct_answer && q.explanation && q.difficulty && q.topic && q.concept
-    );
-
-    if (validQuestions.length === 0) {
-      throw new Error('No valid questions found in response');
-    }
-
-    return validQuestions.slice(0, 15);
+    // AI generation disabled: return empty array
+    return [];
   } catch (error) {
     console.error('Diagnostic test generation error:', error);
-    return generateFallbackDiagnosticQuestions(classLevel);
+    // Do not return fallback questions; return empty array to indicate failure
+    return [];
   }
 }
 
-function getPrerequisiteConceptsForClass(classLevel: number): string {
-  const concepts = {
-    1: "Basic counting, simple addition/subtraction, shape recognition",
-    2: "Addition/subtraction up to 1000, multiplication tables, basic shapes",
-    3: "Multiplication/division, basic fractions, measurement units",
-    4: "Large numbers, proper/improper fractions, basic decimals, angles",
-    5: "Decimal operations, factors/multiples, area/perimeter",
-    6: "Integers, fraction/decimal operations, basic algebra, ratios",
-    7: "Rational numbers, simple equations, lines/angles, triangles",
-    8: "Rational number operations, linear equations, quadrilaterals",
-    9: "Number systems, basic polynomials, coordinate geometry basics",
-    10: "Real numbers, polynomial operations, quadratic concepts",
-    11: "Advanced algebra, basic trigonometry, sequences",
-    12: "Pre-calculus concepts, advanced probability, vectors"
-  };
-  
-  return concepts[classLevel as keyof typeof concepts] || concepts[9];
-}
+
 
 function generateFallbackDiagnosticQuestions(classLevel: number): DiagnosticQuestion[] {
   const baseQuestions: DiagnosticQuestion[] = [
@@ -274,22 +201,8 @@ async function generateRecommendations(
   totalQuestions: number
 ): Promise<string[]> {
   try {
-    let prompt = `You are a friendly math mentor. Based on diagnostic results, provide 5 personalized recommendations.
-
-Results:
-- Score: ${score}/${totalQuestions} (${Math.round((score/totalQuestions)*100)}%)
-- Strengths: ${strengths.join(', ') || 'None identified'}
-- Weaknesses: ${weaknesses.join(', ') || 'None identified'}
-- Major gaps: ${gaps.join(', ') || 'None identified'}
-
-Return ONLY a JSON array of recommendation strings:
-["recommendation 1", "recommendation 2", ...]
-
-Each recommendation should be:
-- Encouraging and positive
-- Specific and actionable
-- Include emojis
-- Written like a friendly mentor`;
+    const GROQ_PROXY_URL = 'http://localhost:3001/api/groq-chat';
+  let prompt = `You are a friendly math mentor. Based on the following diagnostic results, provide 5 personalized recommendations.\n\nResults:\n- Score: ${score}/${totalQuestions} (${Math.round((score/totalQuestions)*100)}%)\n- Strengths: ${strengths.join(', ') || 'None identified'}\n- Weaknesses: ${weaknesses.join(', ') || 'None identified'}\n- Major gaps: ${gaps.join(', ') || 'None identified'}\n\nReturn ONLY a JSON array of recommendation strings:\n[\"recommendation 1\", \"recommendation 2\", ...]\n\nEach recommendation should be:\n- Encouraging and positive\n- Specific and actionable\n- Include emojis\n- Written like a friendly mentor`;
 
     const response = await fetch(GROQ_PROXY_URL, {
       method: 'POST',
@@ -297,55 +210,42 @@ Each recommendation should be:
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: MODEL_NAME,
+        model: 'llama-3.1-8b-instant',
         messages: [
-          { role: "user", content: prompt }
+          { role: 'system', content: prompt },
+          { role: 'user', content: 'Generate 5 personalized math study recommendations. based on ' }
         ]
       })
     });
 
     if (response.ok) {
       const data = await response.json();
-      
-      if (data?.choices?.[0]?.message?.content) {
-        let text = data.choices[0].message.content.trim();
-        
-        // Extract JSON array
-        const firstBracket = text.indexOf('[');
-        const lastBracket = text.lastIndexOf(']');
-        
-        if (firstBracket !== -1 && lastBracket !== -1 && firstBracket < lastBracket) {
-          const jsonString = text.substring(firstBracket, lastBracket + 1);
-          
-          try {
-            const recommendations = JSON.parse(jsonString);
-            if (Array.isArray(recommendations)) {
-              return recommendations;
-            }
-          } catch (parseError) {
-            console.error('Recommendations JSON parsing failed:', parseError);
+      let text = data.choices?.[0]?.message?.content?.trim() || '';
+      // Extract JSON array
+      const firstBracket = text.indexOf('[');
+      const lastBracket = text.lastIndexOf(']');
+      if (firstBracket !== -1 && lastBracket !== -1 && firstBracket < lastBracket) {
+        const jsonString = text.substring(firstBracket, lastBracket + 1);
+        try {
+          const recommendations = JSON.parse(jsonString);
+          if (Array.isArray(recommendations)) {
+            return recommendations;
           }
+        } catch (parseError) {
+          console.error('Recommendations JSON parsing failed:', parseError);
         }
       }
     }
+    // If anything fails, fall through to fallback
   } catch (error) {
-    console.error('Error generating recommendations:', error);
+    console.error('Error generating AI recommendations:', error);
   }
-  
   // Fallback recommendations
-  const fallbackRecommendations = [
+  return [
     `You scored ${score}/${totalQuestions}! 🎉 Every step forward is progress.`,
     "Focus on daily practice - even 15 minutes makes a difference! 📚",
-    "Don't worry about mistakes - they're stepping stones to success! 💪"
+    "Don't worry about mistakes - they're stepping stones to success! 💪",
+    ...(strengths.length > 0 ? [`You're doing great with ${strengths[0]}! 🌟 Keep it up!`] : []),
+    ...(weaknesses.length > 0 ? [`Let's work on ${weaknesses[0]} together - you've got this! 🚀`] : [])
   ];
-  
-  if (strengths.length > 0) {
-    fallbackRecommendations.push(`You're doing great with ${strengths[0]}! 🌟 Keep it up!`);
-  }
-  
-  if (weaknesses.length > 0) {
-    fallbackRecommendations.push(`Let's work on ${weaknesses[0]} together - you've got this! 🚀`);
-  }
-  
-  return fallbackRecommendations;
 }

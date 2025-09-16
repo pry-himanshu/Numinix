@@ -1,16 +1,16 @@
 [
   {
-    "id": "class9_ch1",
+    "id": "ch1",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Number Systems",
-    "topics": ["Real Numbers", "Irrational Numbers", "Rational Numbers", "Laws of Exponents"],
+    "topics": ["Natural numbers","Whole numbers","Integers","Rational numbers","Irrational numbers","Real numbers","Representation of rational numbers on number line","Representation of irrational numbers on number line","Visualizing real numbers on number line","Terminating decimals","Non-terminating recurring decimals","Non-terminating non-recurring decimals","Addition of real numbers","Subtraction of real numbers","Multiplication of real numbers","Division of real numbers","Closure property","Commutative property","Associative property","Distributive property","Properties of irrational numbers","Representation of √2 on number line","Representation of √3 on number line","Representation of √5 on number line","Laws of exponents","Negative exponents","Simplification of expressions with exponents","Surds","Simplification of surds","Comparison of surds","Theorem: √p is irrational if p is prime","Sum of rational and irrational number is irrational","Product of rational and irrational number is irrational"],
     "unlock_cost": 0,
     "order": 1,
     "required_stars": 5
   },
   {
-    "id": "class9_ch2",
+    "id": "ch2",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Polynomials",
@@ -20,7 +20,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch3",
+    "id": "ch3",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Coordinate Geometry",
@@ -30,7 +30,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch4",
+    "id": "ch4",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Linear Equations in Two Variables",
@@ -40,7 +40,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch5",
+    "id": "ch5",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Introduction to Euclid’s Geometry",
@@ -50,7 +50,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch6",
+    "id": "ch6",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Lines and Angles",
@@ -60,7 +60,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch7",
+    "id": "ch7",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Triangles",
@@ -70,7 +70,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch8",
+    "id": "ch8",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Quadrilaterals",
@@ -80,7 +80,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch9",
+    "id": "ch9",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Areas of Parallelograms and Triangles",
@@ -90,7 +90,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch10",
+    "id": "ch10",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Circles",
@@ -100,7 +100,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch11",
+    "id": "ch11",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Constructions",
@@ -110,7 +110,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch12",
+    "id": "ch12",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Heron’s Formula",
@@ -120,7 +120,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch13",
+    "id": "ch13",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Surface Areas and Volumes",
@@ -130,7 +130,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch14",
+    "id": "ch14",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Statistics",
@@ -140,7 +140,7 @@
     "required_stars": 5
   },
   {
-    "id": "class9_ch15",
+    "id": "ch15",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Probability",

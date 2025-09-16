@@ -62,7 +62,7 @@ export function Quiz() {
         <div className="absolute inset-0">
           {[...Array(50)].map((_, i) => (
             <div
-              key={i}
+              key={`bg-dot-${i}`}
               className="absolute w-2 h-2 bg-white/10 rounded-full animate-pulse"
               style={{
                 top: `${Math.random() * 100}%`,
@@ -284,7 +284,7 @@ export function Quiz() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {unlockedChapters.map((chapter) => (
                   <label
-                    key={chapter.id}
+                    key={`chapter-${chapter.id}`}
                     className="group flex items-center space-x-4 p-6 bg-black/20 backdrop-blur-sm rounded-2xl hover:bg-blue-900/20 transition-all duration-300 cursor-pointer border border-white/10 hover:border-blue-400/50 hover:scale-105"
                   >
                     <input
@@ -584,7 +584,7 @@ export function Quiz() {
             <div className="space-y-4">
               {current.options?.map((option, index) => (
                 <button
-                  key={option}
+                  key={`${option}-${index}`}
                   onClick={() => setSelectedAnswer(option)}
                   disabled={showResult}
                   className={`w-full p-6 text-left rounded-2xl border-2 transition-all transform hover:scale-102 active:scale-98 font-semibold text-lg ${

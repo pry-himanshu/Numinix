@@ -1,3 +1,4 @@
+import chaptersData from '../data/chapters.json';
 export interface AIResponse {
 	solution: string;
 	steps: string[];
@@ -9,7 +10,7 @@ export async function solveMathProblem(question: string): Promise<AIResponse> {
 	try {
 		const GROQ_PROXY_URL = 'http://localhost:3001/api/groq-chat';
 		const messages = [
-			{ role: "system", content: "You are MathMentor, a super-smart, friendly, and fun math assistant inside the Numinix app. Follow the same rules and style as before." },
+			{ role: "system", content: "You are MathMentor, a super-smart, friendly, and fun math assistant inside the Numinix app. You are made just to answer math's related things not other things. use emojis in conversation and make the conversation fun . After solving any mathematical question alway give question like user have asked as challange. Make the conversation airy but well explained. " },
 			{ role: "user", content: question }
 		];
 		const response = await fetch(GROQ_PROXY_URL, {
@@ -18,7 +19,7 @@ export async function solveMathProblem(question: string): Promise<AIResponse> {
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({
-				model: "openai/gpt-oss-20b",
+				model: "llama-3.1-8b-instant",
 				messages
 			})
 		});
@@ -49,38 +50,22 @@ export async function generateQuestions(userProfile: any, selectedChapters: stri
 	try {
 		const GROQ_PROXY_URL = 'http://localhost:3001/api/groq-chat';
 		const classLevel = userProfile.class_level;
-		const chaptersData = userProfile.current_chapter_id || {};
 		const strengths = userProfile.strengths || [];
 		const weaknesses = userProfile.weaknesses || [];
 		const unlockedChapters = userProfile.unlocked_chapters || [];
 		
-		// You may want to fetch chapter/topic names from chaptersData if needed
-		// For now, just pass selectedChapters as is
-		
-		let prompt = `You are a math quiz generator for class ${classLevel} student. Personalize the questions based on the following:
+		// Get chapter names and topics for selectedChapters
+		const selectedChapterObjs = chaptersData
+			.filter((ch: any) => selectedChapters.includes(ch.id));
+		const selectedChapterNames = selectedChapterObjs.map((ch: any) => ch.chapter);
+		// Build a topic map for prompt
+		const chapterTopicsList = selectedChapterObjs.map((ch: any) => `- ${ch.chapter}: ${ch.topics && ch.topics.length ? ch.topics.join(', ') : 'No topics listed'}`).join('\n');
 
-Strengths: ${strengths.join(', ') || 'None'}
-Weaknesses: ${weaknesses.join(', ') || 'None'}
-Unlocked Chapters: ${unlockedChapters.join(', ') || 'None'}
-Selected Chapters: ${selectedChapters.join(', ') || 'None'}
-
-Return ONLY a valid JSON array with this exact structure:
-[
-  { "id": "q1", "question": "What is 2 + 2?", "options": ["3", "4", "5", "6"], "correct_answer": "4", "explanation": "2 + 2 equals 4 because we add two and two together.", "difficulty": "easy", "class_level": ${classLevel}, "topic": "Addition" }
-]
-
-Requirements:
-- Exactly 10 questions
-- Questions appropriate for class ${classLevel}
-- Mix of easy, medium, and hard difficulty
-- Focus on selected chapters and user weaknesses
-- Each question must have exactly 4 options
-- Clear explanations
-- Valid JSON format only, no extra text`;
+		let prompt = `You are a math quiz generator for a class ${classLevel} student. Generate 10 challenging, conceptually deep, and curriculum-appropriate questions for class 9 mathematics ONLY.\n\nIMPORTANT: Only generate questions from these chapters: ${selectedChapterNames.join(', ')}. Do NOT include any questions from chapters that are not in this list.\n\nFor each selected chapter, here are the topics you must use:\n${chapterTopicsList}\n\nDistribute the questions across as many different topics as possible, covering multiple topics from each selected chapter. Do not focus all questions on a single topic.\n\nPersonalize the questions based on the following user profile:\n\nStrengths: ${strengths.length ? strengths.join(', ') : 'None'}\nWeaknesses: ${weaknesses.length ? weaknesses.join(', ') : 'None'}\nUnlocked Chapters: ${unlockedChapters.length ? unlockedChapters.join(', ') : 'None'}\nSelected Chapters: ${selectedChapterNames.join(', ') || 'None'}\n\nRules:\n- All questions must be strictly for class 9th level (no primary or lower-level math).\n- Focus on concepts and topics from ONLY the selected chapters and user weaknesses.\n- At least 3 questions should be hard, 4 medium, and 3 easy, but all must be relevant for class 9th.\n- Each question must have exactly 4 options, with only one correct answer.\n- No repetition of questions or options.\n- No trivial arithmetic (e.g., no simple addition/subtraction like 2+2).\n- Include questions that require reasoning, application, and multi-step thinking.\n- Each question must have a clear, student-friendly explanation.\n- Return ONLY a valid JSON array with this exact structure:\n[\n  { "id": "q1", "question": "What is the value of x if 2x + 5 = 17?", "options": ["5", "6", "7", "8"], "correct_answer": "6", "explanation": "2x + 5 = 17 ⇒ 2x = 12 ⇒ x = 6", "difficulty": "medium", "class_level": 9, "topic": "Linear Equations" }\n]\n\nRequirements:\n- Exactly 10 questions\n- All questions must be for class 9th\n- Mix of easy, medium, and hard (no more than 3 easy)\n- Focus on ONLY the selected chapters and user weaknesses\n- Each question must have exactly 4 options\n- Clear explanations\n- Valid JSON format only, no extra text`;
 
 		const messages = [
 			{ role: "system", content: prompt },
-			{ role: "user", content: `Generate 10 personalized math quiz questions for class ${classLevel}.` }
+			{ role: "user", content: `Generate 10 personalized math quiz questions for class ${classLevel} from ${chaptersData}.` }
 		];
 		
 		const response = await fetch(GROQ_PROXY_URL, {
@@ -89,7 +74,7 @@ Requirements:
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({
-				model: "openai/gpt-oss-20b",
+				model: "llama-3.1-8b-instant",
 				messages
 			})
 		});
@@ -115,14 +100,35 @@ Requirements:
 			if (!Array.isArray(generatedQuestions)) {
 				throw new Error('Response is not an array');
 			}
-			generatedQuestions = generatedQuestions.filter(q => 
-				q.id && q.question && q.options && Array.isArray(q.options) && 
-				q.correct_answer && q.explanation && q.difficulty && q.topic
-			);
-			if (generatedQuestions.length === 0) {
-				throw new Error('No valid questions generated');
-			}
-			generatedQuestions = generatedQuestions.slice(0, 10);
+			   generatedQuestions = generatedQuestions.filter(q => 
+				   q.id &&
+				   q.question &&
+				   Array.isArray(q.options) &&
+				   q.options.length > 0 &&
+				   q.options.includes(q.correct_answer) && // ensure correct_answer is in options
+				   q.explanation &&
+				   q.difficulty &&
+				   q.topic
+			   );
+			   // Format question text as markdown if not already
+			   generatedQuestions = generatedQuestions.map(q => ({
+				   ...q,
+				   question: formatQuestionMarkdown(q.question),
+			   }));
+			   if (generatedQuestions.length === 0) {
+				   throw new Error('No valid questions generated');
+			   }
+			   generatedQuestions = generatedQuestions.slice(0, 10);
+// Helper to ensure question text is markdown-formatted
+function formatQuestionMarkdown(text: string): string {
+	// If already contains markdown (e.g., **, _, $, \n, etc.), return as is
+	if (/[*_`$\n]/.test(text)) return text;
+	// Add line breaks after question marks and colons for clarity
+	let formatted = text.replace(/([?:])\s*/g, '$1\n');
+	// Wrap math expressions in $ if simple math detected (e.g., x = 2 + 3)
+	formatted = formatted.replace(/(\d+\s*[+\-*/^]\s*\d+)/g, '`$1`');
+	return formatted;
+}
 		} catch (parseError) {
 			console.error('JSON Parse Error:', parseError);
 			console.error('Raw text:', rawText);
@@ -131,38 +137,7 @@ Requirements:
 		return generatedQuestions;
 	} catch (error: any) {
 		console.error('AI Question Generation Error:', error);
-		// Return fallback questions instead of error
-		return [
-			{
-				id: "fallback_1",
-				question: `What is the value of 5 × 6?`,
-				options: ["25", "30", "35", "40"],
-				correct_answer: "30",
-				explanation: "5 × 6 = 30. When we multiply 5 by 6, we get 30.",
-				difficulty: "easy",
-				class_level: user_profiles.class_level,
-				topic: "Multiplication"
-			},
-			{
-				id: "fallback_2", 
-				question: `If x + 7 = 15, what is the value of x?`,
-				options: ["6", "7", "8", "9"],
-				correct_answer: "8",
-				explanation: "To find x, we subtract 7 from both sides: x = 15 - 7 = 8.",
-				difficulty: "medium",
-				class_level: user_profiles.class_level,
-				topic: "Algebra"
-			},
-			{
-				id: "fallback_3",
-				question: `What is the area of a rectangle with length 8 cm and width 5 cm?`,
-				options: ["13 cm²", "26 cm²", "40 cm²", "45 cm²"],
-				correct_answer: "40 cm²",
-				explanation: "Area of rectangle = length × width = 8 × 5 = 40 cm².",
-				difficulty: "easy",
-				class_level: user_profiles.class_level,
-				topic: "Geometry"
-			}
-		];
+		   // Do not return fallback questions; return empty array to indicate failure
+		   return [];
 	}
 }

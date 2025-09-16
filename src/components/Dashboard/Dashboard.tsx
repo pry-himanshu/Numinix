@@ -135,7 +135,7 @@ export function Dashboard() {
                   <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-2xl p-6 border border-purple-500/30 backdrop-blur-sm">
                     <div className="flex items-center space-x-3 mb-3">
                       <Sparkles className="h-5 w-5 text-purple-400 animate-pulse" />
-                      <span className="font-bold text-purple-300 text-lg">Daily Inspiration</span>
+                      <span className="font-bold text-purple-300 text-lg">Trivia</span>
                       <div className="flex space-x-1">
                         {[...Array(3)].map((_, i) => (
                           <div key={i} className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, Clock, CheckCircle, XCircle, Sparkles, Trophy, Target, ArrowRight, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Brain, Clock, CheckCircle, XCircle, Sparkles, Target, ArrowRight, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ProgressTrackingService, ChapterDiagnostic } from '../../services/progressTrackingService';
 import { generateDiagnosticTest } from '../../services/diagnosticService';
@@ -13,8 +14,10 @@ interface ChapterDiagnosticTestProps {
 }
 
 export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSkip }: ChapterDiagnosticTestProps) {
+  const navigate = useNavigate();
   const { userProfile } = useAuth();
   const [questions, setQuestions] = useState<DiagnosticQuestion[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ questionId: string; answer: string; correct: boolean; timeSpent: number }[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState('');
@@ -43,12 +46,20 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
 
   const loadDiagnosticTest = async () => {
     if (!userProfile) return;
-    
     setLoading(true);
+    setLoadError(null);
     try {
-      const diagnosticQuestions = await generateDiagnosticTest(userProfile.class_level);
-      setQuestions(diagnosticQuestions.slice(0, 15)); // 15 questions for chapter diagnostic
+      const diagnosticQuestions = await generateDiagnosticTest(userProfile.class_level, chapterId);
+      // If AI fails or returns fallback/empty, show error and do not use fallback
+      if (!diagnosticQuestions || diagnosticQuestions.length === 0 || (diagnosticQuestions[0].id && diagnosticQuestions[0].id.startsWith('fallback_'))) {
+        setLoadError('AI failed to generate questions. Please try again later.');
+        setQuestions([]);
+      } else {
+        setQuestions(diagnosticQuestions.slice(0, 15));
+      }
     } catch (error) {
+      setLoadError('AI failed to generate questions. Please try again later.');
+      setQuestions([]);
       console.error('Error loading diagnostic test:', error);
     } finally {
       setLoading(false);
@@ -72,7 +83,8 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
         started_at: new Date().toISOString(),
         questions_attempted: 0,
         questions_correct: 0,
-        concepts_covered: []
+        concepts_covered: [],
+        session_data: {} // Added required property
       });
       setSessionId(sessionId);
     } catch (error) {
@@ -225,7 +237,6 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
       score_percentage: scorePercentage,
       time_taken_minutes: totalTimeMinutes,
       strengths,
-      weaknesses,
       knowledge_gaps: knowledgeGaps,
       prerequisite_concepts: knowledgeGaps, // For now, gaps are prerequisites
       difficulty_level: difficultyLevel,
@@ -252,6 +263,8 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
         });
       }
       onComplete({ ...diagnostic, completed: true });
+      // Redirect to Math Map after completion
+      navigate('/math-map');
     } catch (error) {
       console.error('Error saving diagnostic:', error);
     }
@@ -265,7 +278,21 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
             <Brain className="h-10 w-10 text-white" />
           </div>
           <h2 className="text-3xl font-bold text-white mb-4">Preparing Chapter Diagnostic</h2>
-          <p className="text-gray-300 text-lg">Creating personalized assessment for {chapterName}...</p>
+          <p className="text-gray-300 text-lg">Generating questions with AI, please wait...</p>
+        </div>
+      </div>
+    );
+  }
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+        <div className="bg-black/40 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/20 text-center max-w-lg mx-4">
+          <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+            <XCircle className="h-10 w-10 text-white" />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-4">AI Failed to Generate Questions</h2>
+          <p className="text-gray-300 text-lg mb-4">Please try again in a few moments.</p>
+          <button onClick={loadDiagnosticTest} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow">Retry</button>
         </div>
       </div>
     );

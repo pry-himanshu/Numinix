@@ -135,7 +135,7 @@ export function DiagnosticTest({ onComplete, onSkip }: DiagnosticTestProps) {
         <div className="absolute inset-0">
           {[...Array(50)].map((_, i) => (
             <div
-              key={i}
+              key={`bg-dot-${i}`}
               className="absolute w-2 h-2 bg-white/10 rounded-full animate-pulse"
               style={{
                 top: `${Math.random() * 100}%`,
@@ -237,7 +237,7 @@ export function DiagnosticTest({ onComplete, onSkip }: DiagnosticTestProps) {
               </h3>
               <div className="flex flex-wrap gap-2 justify-center">
                 {finalResult.strengths.map((strength, index) => (
-                  <span key={index} className="bg-emerald-500/20 text-emerald-300 px-4 py-2 rounded-full text-sm font-medium">
+                  <span key={`${strength}-${index}`} className="bg-emerald-500/20 text-emerald-300 px-4 py-2 rounded-full text-sm font-medium">
                     {strength}
                   </span>
                 ))}
@@ -249,7 +249,7 @@ export function DiagnosticTest({ onComplete, onSkip }: DiagnosticTestProps) {
             <h3 className="text-xl font-bold text-purple-300 mb-4">Your Personalized Recommendations</h3>
             <div className="space-y-3">
               {finalResult.recommendations.map((rec, index) => (
-                <div key={index} className="text-purple-100 text-left bg-purple-800/20 p-3 rounded-lg">
+                <div key={`${rec}-${index}`} className="text-purple-100 text-left bg-purple-800/20 p-3 rounded-lg">
                   {rec}
                 </div>
               ))}
@@ -338,7 +338,7 @@ export function DiagnosticTest({ onComplete, onSkip }: DiagnosticTestProps) {
           <div className="space-y-4 mb-8">
             {currentQ.options?.map((option, index) => (
               <button
-                key={option}
+                key={`${option}-${index}`}
                 onClick={() => setSelectedAnswer(option)}
                 disabled={showResult}
                 className={`w-full p-6 text-left rounded-2xl border-2 transition-all transform hover:scale-102 font-semibold text-lg ${

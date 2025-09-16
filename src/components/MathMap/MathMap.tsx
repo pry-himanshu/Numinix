@@ -10,6 +10,7 @@ interface MathMapProps {
 }
 
 export function MathMap({ setShowNavigation }: MathMapProps) {
+  const [loadingPersonalized, setLoadingPersonalized] = useState(false);
   const { userProfile } = useAuth();
   const [chapterDiagnostics, setChapterDiagnostics] = useState<{ [key: string]: ChapterDiagnostic }>({});
   const [showChapterDiagnostic, setShowChapterDiagnostic] = useState<string | null>(null);
@@ -53,12 +54,29 @@ export function MathMap({ setShowNavigation }: MathMapProps) {
   };
 
   const handleDiagnosticComplete = async (diagnostic: ChapterDiagnostic) => {
+    setLoadingPersonalized(true);
     setChapterDiagnostics(prev => ({
       ...prev,
       [diagnostic.chapter_id]: diagnostic
     }));
+  // ...existing code...
+    // You can add more async calls here if needed (e.g., content generation)
+    setLoadingPersonalized(false);
     setShowChapterDiagnostic(null);
     setSelectedChapter(null);
+  if (loadingPersonalized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+        <div className="bg-black/40 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/20 text-center max-w-lg mx-4">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-spin">
+            <span className="text-4xl text-white">🧠</span>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Creating Your Personalized Study Materials...</h2>
+          <p className="text-gray-300">Please wait while we generate your custom learning journey.</p>
+        </div>
+      </div>
+    );
+  }
   };
 
   const handleSkipDiagnostic = () => {
