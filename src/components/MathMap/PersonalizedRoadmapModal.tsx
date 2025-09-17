@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import chaptersData from '../../data/chapters.json';
 import { Brain, Clock, Target, BookOpen, Sparkles, Trophy, Zap, Crown, ArrowRight, CheckCircle, Star, TrendingUp, Play } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ProgressTrackingService } from '../../services/progressTrackingService';
@@ -72,8 +73,7 @@ export function PersonalizedRoadmapModal({ chapterId, chapterName, onClose, setS
       const insights = await ProgressTrackingService.getLatestAIInsights(userProfile.id);
       setAiInsights(insights);
 
-      // Load personalized content for ALL chapter topics
-      const chaptersData = require('../../data/chapters.json');
+  // Load personalized content for ALL chapter topics
       const chapterObj = chaptersData.find((ch: any) => ch.id === chapterId);
       const allTopics = chapterObj && Array.isArray(chapterObj.topics) ? chapterObj.topics : [];
       const contentData: { [topic: string]: PersonalizedContent } = {};

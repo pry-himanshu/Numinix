@@ -9,20 +9,22 @@ export async function generateDiagnosticTest(classLevel: number, chapterId: stri
     throw new Error(`Chapter with id ${chapterId} not found.`);
   }
   try {
-    
-  let prompt = `You are an expert math educator creating diagnostic questions for Class ${classLevel} based on the basic  concepts required for chapter  ${chapter.chapter} .
+    const prerequisiteConcepts = chapter.topics && chapter.topics.length > 0
+      ? chapter.topics.map((t: string) => `- ${t}`).join('\n')
+      : chapter.chapter;
+    const prompt = `You are an expert math educator creating diagnostic questions for Class ${classLevel} based on the prerequisite (basic) concepts required for the chapter: ${chapter.chapter}.
 
-IMPORTANT: Only create mathematics questions. Do NOT include any science, physics, chemistry, or biology content. Focus strictly on math. Options should have a correct option and answer shoulod 100% correct.
+IMPORTANT: Only create mathematics questions. Do NOT include any science, physics, chemistry, or biology content. Focus strictly on math. Options should have a correct option and answer should be 100% correct.
 
 CRITICAL INSTRUCTIONS:
 1. Return ONLY a valid JSON array
 2. No markdown formatting, no explanations, no additional text
 3. Must be parseable JSON
 
-Create exactly 15 diagnostic questions that test prerequisite knowledge needed for the chapter  ${chapter.chapter} in Class ${classLevel} mathematics.
+Create exactly 15 diagnostic questions that test prerequisite knowledge needed for the chapter "${chapter.chapter}" in Class ${classLevel} mathematics.
 
-Focus on these prerequisite concepts:
- ${chapter.chapter}
+Focus ONLY on these prerequisite concepts (one per question):
+${prerequisiteConcepts}
 
 Return this exact JSON structure:
 [
@@ -41,15 +43,48 @@ Return this exact JSON structure:
 Requirements:
 - Mix of difficulties: 6 easy, 6 medium, 3 hard
 - Test prerequisite knowledge only
+- Each question should clearly state the concept it tests
 - Clear, student-friendly explanations
 - Return ONLY the JSON array`;
 
-    // AI generation disabled: return empty array
-    return [];
+    const response = await fetch(GROQ_PROXY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          { role: 'system', content: prompt },
+          { role: 'user', content: 'Generate 15 diagnostic math questions as described.' }
+        ]
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      let text = data.choices?.[0]?.message?.content?.trim() || '';
+      // Extract JSON array
+      const firstBracket = text.indexOf('[');
+      const lastBracket = text.lastIndexOf(']');
+      if (firstBracket !== -1 && lastBracket !== -1 && firstBracket < lastBracket) {
+        const jsonString = text.substring(firstBracket, lastBracket + 1);
+        try {
+          const questions = JSON.parse(jsonString);
+          if (Array.isArray(questions) && questions.length > 0) {
+            return questions;
+          }
+        } catch (parseError) {
+          console.error('AI questions JSON parsing failed:', parseError);
+        }
+      }
+    }
+    // If anything fails, fall through to fallback
+    return generateFallbackDiagnosticQuestions(classLevel);
   } catch (error) {
     console.error('Diagnostic test generation error:', error);
-    // Do not return fallback questions; return empty array to indicate failure
-    return [];
+    // Fallback to preloaded questions
+    return generateFallbackDiagnosticQuestions(classLevel);
   }
 }
 
@@ -58,7 +93,7 @@ Requirements:
 function generateFallbackDiagnosticQuestions(classLevel: number): DiagnosticQuestion[] {
   const baseQuestions: DiagnosticQuestion[] = [
     {
-      id: "diag_1",
+      id: "fallback_1",
       question: "What is 15 + 27?",
       options: ["42", "41", "43", "40"],
       correct_answer: "42",
@@ -68,7 +103,7 @@ function generateFallbackDiagnosticQuestions(classLevel: number): DiagnosticQues
       concept: "Addition"
     },
     {
-      id: "diag_2",
+      id: "fallback_2",
       question: "Which of these is a rational number?",
       options: ["√2", "π", "3/4", "√5"],
       correct_answer: "3/4",
@@ -78,7 +113,7 @@ function generateFallbackDiagnosticQuestions(classLevel: number): DiagnosticQues
       concept: "Rational Numbers"
     },
     {
-      id: "diag_3",
+      id: "fallback_3",
       question: "What is 2³?",
       options: ["6", "8", "9", "4"],
       correct_answer: "8",
@@ -88,7 +123,7 @@ function generateFallbackDiagnosticQuestions(classLevel: number): DiagnosticQues
       concept: "Powers"
     },
     {
-      id: "diag_4",
+      id: "fallback_4",
       question: "What is the area of a square with side 5 cm?",
       options: ["20 cm²", "25 cm²", "10 cm²", "15 cm²"],
       correct_answer: "25 cm²",
@@ -98,7 +133,7 @@ function generateFallbackDiagnosticQuestions(classLevel: number): DiagnosticQues
       concept: "Area calculation"
     },
     {
-      id: "diag_5",
+      id: "fallback_5",
       question: "If 3x = 15, what is x?",
       options: ["3", "4", "5", "6"],
       correct_answer: "5",
@@ -113,7 +148,7 @@ function generateFallbackDiagnosticQuestions(classLevel: number): DiagnosticQues
   const additionalQuestions: DiagnosticQuestion[] = [];
   for (let i = 6; i <= 15; i++) {
     additionalQuestions.push({
-      id: `diag_${i}`,
+      id: `fallback_${i}`,
       question: `What is ${i + 2} + ${i + 3}?`,
       options: [`${2*i + 4}`, `${2*i + 5}`, `${2*i + 6}`, `${2*i + 7}`],
       correct_answer: `${2*i + 5}`,

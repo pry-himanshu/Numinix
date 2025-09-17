@@ -22,12 +22,21 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
   const [answers, setAnswers] = useState<{ questionId: string; answer: string; correct: boolean; timeSpent: number }[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [showResult, setShowResult] = useState(false);
+  const [testCompleted, setTestCompleted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
   const [loading, setLoading] = useState(true);
   const [testStarted, setTestStarted] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [questionStartTime, setQuestionStartTime] = useState<Date | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loading && questions.length > 0) {
+      console.log('QUESTIONS DISPLAYED IN UI:', questions);
+    } else if (!loading && questions.length === 0) {
+      console.warn('No questions displayed in UI.');
+    }
+  }, [loading, questions]);
 
   useEffect(() => {
     if (userProfile && !testStarted) {
@@ -50,6 +59,7 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
     setLoadError(null);
     try {
       const diagnosticQuestions = await generateDiagnosticTest(userProfile.class_level, chapterId);
+      console.log('DIAGNOSTIC QUESTIONS RECEIVED:', diagnosticQuestions);
       // If AI fails or returns fallback/empty, show error and do not use fallback
       if (!diagnosticQuestions || diagnosticQuestions.length === 0 || (diagnosticQuestions[0].id && diagnosticQuestions[0].id.startsWith('fallback_'))) {
         setLoadError('AI failed to generate questions. Please try again later.');
@@ -169,7 +179,9 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
       setTimeLeft(30);
       setQuestionStartTime(new Date());
     } else {
+      // Mark test as done immediately, but do not redirect
       completeTest();
+      setTestCompleted(true);
     }
   };
 
@@ -230,30 +242,20 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
     
     // Create diagnostic result
     const diagnostic: ChapterDiagnostic = {
-      user_id: userProfile.id,
-      chapter_id: chapterId,
-      total_questions: questions.length,
-      correct_answers: correctAnswers,
-      score_percentage: scorePercentage,
-      time_taken_minutes: totalTimeMinutes,
-      strengths,
-      knowledge_gaps: knowledgeGaps,
-      prerequisite_concepts: knowledgeGaps, // For now, gaps are prerequisites
-      difficulty_level: difficultyLevel,
-      raw_responses: {
-        answers,
-        conceptPerformance,
-        topicPerformance
-      },
-      completed: false // Always false on creation, will be set to true after test
+    user_id: userProfile.id,
+    chapter_id: chapterId,
+    total_questions: questions.length,
+    correct_answers: correctAnswers,
+    score_percentage: scorePercentage,
+    time_taken_minutes: totalTimeMinutes,
+  strengths,
+    completed: false // Always false on creation, will be set to true after test
     };
     
     // Save diagnostic results
     try {
       await ProgressTrackingService.saveChapterDiagnostic(diagnostic);
-      // Mark diagnostic as completed after saving
       await ProgressTrackingService.markDiagnosticCompleted(userProfile.id, chapterId);
-      // End study session
       if (sessionId) {
         await ProgressTrackingService.endStudySession(sessionId, {
           duration_minutes: totalTimeMinutes,
@@ -262,14 +264,20 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
           concepts_covered: Object.keys(conceptPerformance)
         });
       }
-      onComplete({ ...diagnostic, completed: true });
-      // Redirect to Math Map after completion
-      navigate('/math-map');
+  onComplete({ ...diagnostic, completed: true });
+  setTestCompleted(true);
     } catch (error) {
       console.error('Error saving diagnostic:', error);
     }
   };
 
+  // Redirect to Math Map after marking as done
+  useEffect(() => {
+    if (testCompleted) {
+      navigate('/math-map');
+    }
+  }, [testCompleted, navigate]);
+  // No testCompleted UI, user is redirected instantly after marking as done
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center">
@@ -454,7 +462,7 @@ export function ChapterDiagnosticTest({ chapterId, chapterName, onComplete, onSk
           <div className="space-y-4 mb-8">
             {currentQ.options?.map((option, index) => (
               <button
-                key={option}
+                key={option + '-' + index}
                 onClick={() => setSelectedAnswer(option)}
                 disabled={showResult}
                 className={`w-full p-6 text-left rounded-2xl border-2 transition-all transform hover:scale-102 font-semibold text-lg ${

@@ -4,7 +4,8 @@
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Number Systems",
-    "topics": ["Natural numbers","Whole numbers","Integers","Rational numbers","Irrational numbers","Real numbers","Representation of rational numbers on number line","Representation of irrational numbers on number line","Visualizing real numbers on number line","Terminating decimals","Non-terminating recurring decimals","Non-terminating non-recurring decimals","Addition of real numbers","Subtraction of real numbers","Multiplication of real numbers","Division of real numbers","Closure property","Commutative property","Associative property","Distributive property","Properties of irrational numbers","Representation of √2 on number line","Representation of √3 on number line","Representation of √5 on number line","Laws of exponents","Negative exponents","Simplification of expressions with exponents","Surds","Simplification of surds","Comparison of surds","Theorem: √p is irrational if p is prime","Sum of rational and irrational number is irrational","Product of rational and irrational number is irrational"],
+   
+    "topics": ["Natural numbers","Whole numbers","Integers","Rational numbers","Irrational numbers"],
     "unlock_cost": 0,
     "order": 1,
     "required_stars": 5
@@ -129,24 +130,15 @@
     "order": 13,
     "required_stars": 5
   },
+ 
   {
     "id": "ch14",
-    "class_level": 9,
-    "subject": "Mathematics",
-    "chapter": "Statistics",
-    "topics": ["Collection of Data", "Presentation of Data", "Graphical Representation", "Mean, Median and Mode"],
-    "unlock_cost": 5850,
-    "order": 14,
-    "required_stars": 5
-  },
-  {
-    "id": "ch15",
     "class_level": 9,
     "subject": "Mathematics",
     "chapter": "Probability",
     "topics": ["Random Experiments", "Outcomes and Events", "Simple Problems on Probability"],
     "unlock_cost": 6650,
-    "order": 15,
+    "order": 14,
     "required_stars": 5
   }
 ]

@@ -50,8 +50,8 @@ export interface ChapterDiagnostic {
   time_taken_minutes: number;
   strengths: string[];
   last_practiced_at?: string;
-  time_to_master_minutes: number;
-  difficulty_progression: string[];
+  time_to_master_minutes?: number;
+  difficulty_progression?: string[];
   completed?: boolean;
 }
 
@@ -468,15 +468,7 @@ Return only the JSON array of insights.`;
       if (topicAccuracy >= 80) difficultyLevel = 'advanced';
       else if (topicAccuracy >= 60) difficultyLevel = 'intermediate';
 
-      // Generate personalized content
-      const content = await this.generatePersonalizedContent(
-        userId,
-        chapterId,
-        topic,
-        difficultyLevel,
-        wasCorrect,
-        concept
-      );
+    
 
       // Save or update content
       const { error } = await supabase
