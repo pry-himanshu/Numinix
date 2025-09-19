@@ -20,6 +20,7 @@ CRITICAL INSTRUCTIONS:
 1. Return ONLY a valid JSON array
 2. No markdown formatting, no explanations, no additional text
 3. Must be parseable JSON
+4. All options in a question must be unique. There must be only ONE correct answer per question. Do NOT repeat any option or provide two correct answers in the options.
 
 Create exactly 15 diagnostic questions that test prerequisite knowledge needed for the chapter "${chapter.chapter}" in Class ${classLevel} mathematics.
 
