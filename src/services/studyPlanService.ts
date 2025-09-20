@@ -1,7 +1,7 @@
 import { StudyPlan, Chapter, DiagnosticResult } from '../types';
 import chaptersData from '../data/chapters.json';
 
-const GROQ_PROXY_URL = 'http://localhost:3001/api/groq-chat';
+const GROQ_PROXY_URL = 'https://numinix.onrender.com';
 const MODEL_NAME = 'openai/gpt-oss-20b';
 
 export async function generatePersonalizedStudyPlan(

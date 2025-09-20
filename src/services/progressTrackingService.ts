@@ -1,7 +1,7 @@
 const MODEL_NAME = 'openai/gpt-oss-20b';
 import { supabase } from '../lib/supabase';
 
-const GROQ_PROXY_URL = 'http://localhost:3001/api/groq-chat';
+const GROQ_PROXY_URL = 'https://numinix.onrender.com';
 // Use a valid model name for GROQ API (update as needed)
 
 
