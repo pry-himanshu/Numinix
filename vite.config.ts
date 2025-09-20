@@ -6,7 +6,7 @@ import { resolve } from 'path';
 import history from 'connect-history-api-fallback';
 
 export default defineConfig({
-  base: '/Numinix/', // Set base for GitHub Pages deployment
+  base: './', // Set base for GitHub Pages deployment
   plugins: [
     react(),
     // Add more plugins if needed
