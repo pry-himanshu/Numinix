@@ -1,7 +1,7 @@
 const MODEL_NAME = 'openai/gpt-oss-20b';
 import { supabase } from '../lib/supabase';
 
-const GROQ_PROXY_URL = 'https://numinix.onrender.com';
+const GROQ_PROXY_URL = '/api/groqProxy';
 // Use a valid model name for GROQ API (update as needed)
 
 

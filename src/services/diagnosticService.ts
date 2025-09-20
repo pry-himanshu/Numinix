@@ -1,7 +1,7 @@
 import { DiagnosticQuestion, DiagnosticResult } from '../types';
 import chaptersData from '../data/chapters.json';
 
-const GROQ_PROXY_URL = 'https://numinix.onrender.com';
+const GROQ_PROXY_URL = '/api/groqProxy';
 
 export async function generateDiagnosticTest(classLevel: number, chapterId: string): Promise<DiagnosticQuestion[]> {
   const chapter = chaptersData.find(c => c.id === chapterId);
@@ -237,7 +237,7 @@ async function generateRecommendations(
   totalQuestions: number
 ): Promise<string[]> {
   try {
-    const GROQ_PROXY_URL = 'https://numinix.onrender.com';
+  const GROQ_PROXY_URL = '/api/groqProxy';
   let prompt = `You are a friendly math mentor. Based on the following diagnostic results, provide 5 personalized recommendations.\n\nResults:\n- Score: ${score}/${totalQuestions} (${Math.round((score/totalQuestions)*100)}%)\n- Strengths: ${strengths.join(', ') || 'None identified'}\n- Weaknesses: ${weaknesses.join(', ') || 'None identified'}\n- Major gaps: ${gaps.join(', ') || 'None identified'}\n\nReturn ONLY a JSON array of recommendation strings:\n[\"recommendation 1\", \"recommendation 2\", ...]\n\nEach recommendation should be:\n- Encouraging and positive\n- Specific and actionable\n- Include emojis\n- Written like a friendly mentor`;
 
     const response = await fetch(GROQ_PROXY_URL, {
