@@ -1,2 +1,7 @@
 [functions]
 directory = "functions"
+
+[[redirects]]
+	from = "/api/groqProxy"
+	to = "/.netlify/functions/groqProxy"
+	status = 200
