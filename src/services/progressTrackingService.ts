@@ -1,7 +1,8 @@
+const GROQ_PROXY_URL = 'https://backend-n6jop.sevalla.app/api/groq-chat';
 const MODEL_NAME = 'openai/gpt-oss-20b';
 import { supabase } from '../lib/supabase';
 
-const GROQ_PROXY_URL = '/api/groqProxy';
+  // ...existing code...
 // Use a valid model name for GROQ API (update as needed)
 
 

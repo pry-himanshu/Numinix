@@ -1,3 +1,4 @@
+const GROQ_PROXY_URL = 'https://backend-n6jop.sevalla.app/api/groq-chat';
 import chaptersData from '../data/chapters.json';
 export interface AIResponse {
 	solution: string;
@@ -8,7 +9,6 @@ export interface AIResponse {
 
 export async function solveMathProblem(question: string): Promise<AIResponse> {
 	try {
-		const GROQ_PROXY_URL = '/api/groqProxy';
 		const messages = [
 			{ role: "system", content: "You are MathMentor, a super-smart, friendly, and fun math assistant inside the Numinix app. You are made just to answer math's related things not other things. use emojis in conversation and make the conversation fun . After solving any mathematical question alway give question like user have asked as challange. Make the conversation airy but well explained. " },
 			{ role: "user", content: question }
@@ -48,7 +48,6 @@ export async function solveMathProblem(question: string): Promise<AIResponse> {
 // Personalized AI quiz question generator
 export async function generateQuestions(userProfile: any, selectedChapters: string[]): Promise<any[]> {
 	try {
-		const GROQ_PROXY_URL = '/api/groqProxy';
 		const classLevel = userProfile.class_level;
 		const strengths = userProfile.strengths || [];
 		const weaknesses = userProfile.weaknesses || [];

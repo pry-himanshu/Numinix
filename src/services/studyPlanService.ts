@@ -1,7 +1,8 @@
+const GROQ_PROXY_URL = 'https://backend-n6jop.sevalla.app/api/groq-chat';
 import { StudyPlan, Chapter, DiagnosticResult } from '../types';
 import chaptersData from '../data/chapters.json';
 
-const GROQ_PROXY_URL = '/api/groqProxy';
+  // ...existing code...
 const MODEL_NAME = 'openai/gpt-oss-20b';
 
 export async function generatePersonalizedStudyPlan(

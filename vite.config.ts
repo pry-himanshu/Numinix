@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 import { resolve } from 'path';
 import history from 'connect-history-api-fallback';
 
@@ -19,6 +18,7 @@ export default defineConfig({
       allow: ['.'],
     },
     middlewareMode: false,
+    allowedHosts: ['1928db400fd1.ngrok-free.app'],
     // Add SPA fallback middleware
     setupMiddlewares: (middlewares) => {
       middlewares.use(history());
